@@ -1,0 +1,31 @@
+const COLORS=['#a31f24','#2f5d62','#d9a441','#6b3fa0','#c2571a','#3a7d44','#1f4e8c','#8c1f5e','#5a4632','#0f7c80','#b8860b','#444'];
+let S=JSON.parse(localStorage.getItem('fbbb')||'null')||{artists:Array.from({length:12},(_,i)=>({id:i,name:'Artist '+(i+1),phone:'',email:''})),bookings:{}};
+let cur=new Date();cur=new Date(cur.getFullYear(),cur.getMonth(),1);let listView=false;
+const save=()=>localStorage.setItem('fbbb',JSON.stringify(S));const ids=()=>S.artists.map(a=>a.id);const nm=id=>S.artists[id]?.name||'?';
+const MN=d=>d.toLocaleString('en-US',{month:'long',year:'numeric'});
+function render(){const y=cur.getFullYear(),m=cur.getMonth(),c=counts(S.bookings,ids(),y,m),slots=slotsInMonth(y,m);
+ document.getElementById('mon').textContent=MN(cur);
+ const filled=slots.filter(k=>S.bookings[k]!=null).length;document.getElementById('stats').innerHTML=`<b>${filled}</b> filled / <b>${slots.length-filled}</b> open of ${slots.length} sets (${SLOT})`;
+ document.getElementById('roster').innerHTML=S.artists.map(a=>`<div class="art" data-i="${a.id}"><span class="dot" style="background:${COLORS[a.id]}"></span><input data-f="name" value="${a.name.replace(/"/g,'&quot;')}"><span class="cnt" title="gigs this month">${c[a.id]}</span><div class="det"><input data-f="phone" placeholder="phone" value="${a.phone}"><input data-f="email" placeholder="email" value="${a.email}"></div></div>`).join('');
+ const g=document.getElementById('grid');let h=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('');
+ for(let i=0;i<cur.getDay();i++)h+='<div class="day blank"></div>';
+ const d=new Date(y,m,1);while(d.getMonth()===m){const k=key(d),b=isBookable(d),a=S.bookings[k];
+  h+=b?`<div class="day bk ${a!=null?'filled':''}" data-k="${k}" style="${a!=null?'background:'+COLORS[a]:''}"><b>${d.getDate()}</b><span class="slot">5-7 PM</span><span class="tag">${a!=null?nm(a):'OPEN'}</span></div>`:`<div class="day"><b>${d.getDate()}</b></div>`;d.setDate(d.getDate()+1);}
+ g.innerHTML=h;
+ document.getElementById('list').innerHTML=`<h3>${MN(cur)} schedule</h3><table><tr><th>Date</th><th>Time</th><th>Artist</th><th>Phone</th></tr>${slots.map(k=>{const a=S.bookings[k];const dt=new Date(k+'T12:00');return `<tr><td>${dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</td><td>${SLOT}</td><td>${a!=null?nm(a):'OPEN'}</td><td>${a!=null?S.artists[a].phone:''}</td></tr>`}).join('')}</table>`;
+ g.hidden=listView;document.getElementById('list').hidden=!listView;document.getElementById('view').textContent=listView?'Month view':'List view';}
+document.getElementById('roster').addEventListener('input',e=>{const i=+e.target.closest('.art').dataset.i;S.artists[i][e.target.dataset.f]=e.target.value;save();});
+document.getElementById('roster').addEventListener('change',()=>render());
+document.getElementById('roster').addEventListener('click',e=>{if(e.target.classList.contains('dot'))e.target.parentNode.classList.toggle('open');});
+let dk=null;document.getElementById('grid').addEventListener('click',e=>{const el=e.target.closest('.bk');if(!el)return;dk=el.dataset.k;
+ document.getElementById('dlgT').textContent=new Date(dk+'T12:00').toDateString()+' '+SLOT;
+ document.getElementById('dlgS').innerHTML=S.artists.map(a=>`<option value="${a.id}" ${S.bookings[dk]===a.id?'selected':''}>${a.name}</option>`).join('');document.getElementById('dlg').showModal();});
+document.getElementById('dlg').addEventListener('close',e=>{const v=e.target.returnValue;if(v==='clear')delete S.bookings[dk];if(v==='save'){delete S.bookings[dk];const r=book(S.bookings,dk,+document.getElementById('dlgS').value);if(!r.ok)alert(r.err);}save();render();});
+const btn=(id,f)=>document.getElementById(id).onclick=f;
+btn('prev',()=>{cur.setMonth(cur.getMonth()-1);render()});btn('next',()=>{cur.setMonth(cur.getMonth()+1);render()});
+btn('auto',()=>{autoFill(S.bookings,ids(),cur.getFullYear(),cur.getMonth());save();render()});
+btn('clear',()=>{if(!confirm('Clear all bookings this month?'))return;slotsInMonth(cur.getFullYear(),cur.getMonth()).forEach(k=>delete S.bookings[k]);save();render()});
+btn('view',()=>{listView=!listView;render()});btn('print',()=>window.print());
+btn('csv',()=>{const rows=[['Date','Day','Time','Artist','Phone','Email']];slotsInMonth(cur.getFullYear(),cur.getMonth()).forEach(k=>{const a=S.bookings[k],A=a!=null?S.artists[a]:{name:'OPEN',phone:'',email:''};rows.push([k,new Date(k+'T12:00').toLocaleDateString('en-US',{weekday:'short'}),SLOT,A.name,A.phone,A.email])});
+ const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));l.download='fat-bottom-schedule-'+key(cur).slice(0,7)+'.csv';l.click();});
+if(location.hash==="#demo"||!localStorage.getItem("fbbb")){cur=new Date(2026,10,1);S.artists[0].name="Blue Foley";autoFill(S.bookings,ids(),2026,10);}render();

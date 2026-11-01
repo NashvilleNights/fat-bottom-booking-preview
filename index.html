@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fat Bottom Brewery Booking Bot</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"></head><body>
+<header><div class="badge">FB</div><div><h1>Fat Bottom Brewery Booking Bot</h1>
+<p class="sub">Booking calendar for Fat Bottom Brewing, BNA (by Nashville Nights). Sun, Mon, Thu, Fri. One set, 5:00-7:00 PM CT.</p></div></header>
+<main>
+<section class="panel" id="rosterPanel"><h2>Roster (12)</h2><div id="roster"></div></section>
+<section class="panel cal"><div class="bar"><button id="prev">&lsaquo;</button><h2 id="mon"></h2><button id="next">&rsaquo;</button>
+<span class="sp"></span><button id="auto">Auto-fill fairly</button><button id="clear">Clear month</button><button id="csv">Export CSV</button><button id="print">Print</button><button id="view">List view</button></div>
+<div id="stats"></div><div id="grid"></div><div id="list" hidden></div></section>
+</main>
+<dialog id="dlg"><form method="dialog"><h3 id="dlgT"></h3><select id="dlgS"></select><div class="row"><button value="save">Save</button><button value="clear">Open slot</button><button value="cancel">Cancel</button></div></form></dialog>
+<footer>Not affiliated with or endorsed by Fat Bottom Brewing Co. Data saved in this browser only.</footer>
+<script src="logic.js"></script><script src="app.js"></script></body></html>
